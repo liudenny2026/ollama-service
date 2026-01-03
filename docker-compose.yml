@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  ollama:
+    build: .
+    container_name: ollama-service
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # 如果您的系统有GPU，可以取消下面的注释以启用GPU加速
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    # 确保模型初始化
+    command: sh -c "./init_ollama.sh"
+
+volumes:
+  ollama_data:

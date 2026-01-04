@@ -1,5 +1,5 @@
-# Use the official Ollama image with registry mirror
-FROM mirror.ccs.tencentyun.com/ollama/ollama:0.13.5
+# Use the official Ollama image
+FROM ollama/ollama:0.13.5
 
 # Install curl for health checks and other utilities
 RUN if which apk > /dev/null 2>&1; then \

@@ -25,17 +25,18 @@ LABEL maintainer="GitLab Ollama Service" \
 EXPOSE 11434
 
 # Health check to ensure the service is running
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:11434/api/tags || exit 1
+HEALTHCHECK CMD curl -f http://localhost:11434/api/tags || exit 1
 
 # Create a script to properly start Ollama and download the model
 RUN echo '#!/bin/bash' > /start_and_download.sh && \
+    echo 'set -e' >> /start_and_download.sh && \
     echo '' >> /start_and_download.sh && \
     echo '# Start Ollama service in background' >> /start_and_download.sh && \
-    echo 'ollama serve > /dev/null 2>&1 &' >> /start_and_download.sh && \
+    echo 'ollama serve > /var/log/ollama.log 2>&1 &' >> /start_and_download.sh && \
+    echo 'OLLAMA_PID=$!' >> /start_and_download.sh && \
     echo '' >> /start_and_download.sh && \
     echo '# Wait for the service to be available' >> /start_and_download.sh && \
-    echo 'max_attempts=30' >> /start_and_download.sh && \
+    echo 'max_attempts=60' >> /start_and_download.sh && \
     echo 'attempt=1' >> /start_and_download.sh && \
     echo 'while [ $attempt -le $max_attempts ]; do' >> /start_and_download.sh && \
     echo '  if curl -f http://localhost:11434/api/tags > /dev/null 2>&1; then' >> /start_and_download.sh && \
@@ -43,23 +44,24 @@ RUN echo '#!/bin/bash' > /start_and_download.sh && \
     echo '    break' >> /start_and_download.sh && \
     echo '  else' >> /start_and_download.sh && \
     echo '    echo "Attempt $attempt/$max_attempts: Waiting for Ollama service..."' >> /start_and_download.sh && \
-    echo '    sleep 10' >> /start_and_download.sh && \
+    echo '    sleep 5' >> /start_and_download.sh && \
     echo '    ((attempt++))' >> /start_and_download.sh && \
     echo '  fi' >> /start_and_download.sh && \
     echo 'done' >> /start_and_download.sh && \
     echo '' >> /start_and_download.sh && \
     echo 'if [ $attempt -gt $max_attempts ]; then' >> /start_and_download.sh && \
     echo '  echo "Error: Ollama service did not start within the expected time"' >> /start_and_download.sh && \
+    echo '  cat /var/log/ollama.log || true' >> /start_and_download.sh && \
     echo '  exit 1' >> /start_and_download.sh && \
     echo 'fi' >> /start_and_download.sh && \
     echo '' >> /start_and_download.sh && \
     echo '# Download the default model' >> /start_and_download.sh && \
     echo 'echo "Downloading qwen3:1.7b model..."' >> /start_and_download.sh && \
-    echo 'ollama pull qwen3:1.7b || echo "Model download failed, but continuing..."' >> /start_and_download.sh && \
-    echo 'echo "Model download completed"' >> /start_and_download.sh && \
+    echo 'ollama pull qwen3:1.7b || echo "Warning: Model download failed"' >> /start_and_download.sh && \
+    echo 'echo "Model setup completed"' >> /start_and_download.sh && \
     echo '' >> /start_and_download.sh && \
-    echo '# Keep the service running' >> /start_and_download.sh && \
-    echo 'tail -f /dev/null' >> /start_and_download.sh && \
+    echo '# Wait for Ollama process' >> /start_and_download.sh && \
+    echo 'wait $OLLAMA_PID' >> /start_and_download.sh && \
     chmod +x /start_and_download.sh
 
 # Create a script for Streamlit model selector

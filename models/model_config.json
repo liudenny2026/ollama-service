@@ -1,0 +1,39 @@
+{
+  "default_model": "qwen3:1.7b",
+  "available_models": [
+    "qwen2.5:7b",
+    "qwen3:latest",
+    "qwen3:0.6b",
+    "qwen3:1.7b",
+    "qwen3:4b",
+    "qwen3:14b",
+    "qwen3:32b",
+    "qwen3:235b",
+    "llama3:8b",
+    "llama3:70b",
+    "gemma2:2b",
+    "gemma2:9b",
+    "mistral:7b",
+    "mixtral:8x7b",
+    "phi3:3.8b",
+    "command-r:35b",
+    "yi:9b",
+    "dbrx:132b"
+  ],
+  "model_sources": {
+    "qwen3": "https://registry.ollama.ai/library/qwen3",
+    "llama3": "https://registry.ollama.ai/library/llama3",
+    "gemma2": "https://registry.ollama.ai/library/gemma2",
+    "mistral": "https://registry.ollama.ai/library/mistral",
+    "mixtral": "https://registry.ollama.ai/library/mixtral",
+    "phi3": "https://registry.ollama.ai/library/phi3",
+    "command-r": "https://registry.ollama.ai/library/command-r",
+    "yi": "https://registry.ollama.ai/library/yi",
+    "dbrx": "https://registry.ollama.ai/library/dbrx"
+  },
+  "download_settings": {
+    "use_mirror": true,
+    "mirror_url": "https://registry.ollama.ai",
+    "timeout": 3600
+  }
+}

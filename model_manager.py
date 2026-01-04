@@ -14,6 +14,27 @@ from typing import List, Dict, Optional
 OLLAMA_HOST = os.getenv('OLLAMA_HOST', 'http://localhost:11434')
 OLLAMA_API_BASE = f"{OLLAMA_HOST}/api"
 
+# Load model configuration from models/model_config.json
+MODEL_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'models', 'model_config.json')
+MODEL_CONFIG = {}
+
+try:
+    with open(MODEL_CONFIG_PATH, 'r', encoding='utf-8') as f:
+        MODEL_CONFIG = json.load(f)
+except FileNotFoundError:
+    # Default config if file doesn't exist
+    MODEL_CONFIG = {
+        "default_model": "qwen3:1.7b",
+        "available_models": ["qwen3:1.7b"],
+        "download_settings": {"use_mirror": True}
+    }
+
+def get_default_model():
+    return MODEL_CONFIG.get("default_model", "qwen3:1.7b")
+
+def get_available_models():
+    return MODEL_CONFIG.get("available_models", ["qwen3:1.7b"])
+
 class OllamaModelManager:
     def __init__(self, host: str = None):
         self.host = host or OLLAMA_HOST
@@ -128,19 +149,21 @@ def main():
         
         print("")
         
-        # Default: pull qwen3:1.7b if not already present
-        model_name = "qwen3:1.7b"
-        model_exists = any(model.get('name') == model_name for model in models)
+        # Get default model from config
+        default_model = get_default_model()
+        
+        # Default: pull default model if not already present
+        model_exists = any(model.get('name') == default_model for model in models)
         
         if not model_exists:
-            print(f"Default model {model_name} not found. Pulling now...")
-            success = manager.pull_model(model_name)
+            print(f"Default model {default_model} not found. Pulling now...")
+            success = manager.pull_model(default_model)
             if success:
-                print(f"Successfully downloaded {model_name}")
+                print(f"Successfully downloaded {default_model}")
             else:
-                print(f"Failed to download {model_name}")
+                print(f"Failed to download {default_model}")
         else:
-            print(f"Default model {model_name} already exists")
+            print(f"Default model {default_model} already exists")
         
         return
     

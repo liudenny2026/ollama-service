@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  ollama:
+    # 使用GitLab Container Registry中的镜像
+    # 镜像将在CI/CD管道构建后推送至此
+    image: ${CI_REGISTRY_IMAGE:-registry.gitlab.com/your-namespace/your-project/ollama}:latest
+    container_name: ollama-gitlab-registry
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+    # 如果您的系统有GPU，可以取消下面的注释以启用GPU加速
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    restart: unless-stopped
+    # 确保模型初始化
+    command: sh -c "./init_ollama.sh"
+
+volumes:
+  ollama_data:

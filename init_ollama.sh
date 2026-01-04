@@ -3,8 +3,6 @@
 # Ollama Service Initialization Script
 # This script initializes the Ollama service and ensures the default model is available
 
-set -e  # Exit on any error
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -67,8 +65,9 @@ pull_model() {
     fi
 }
 
-# Main execution
-print_info "Starting Ollama service initialization..."
+# Start Ollama service in background
+print_info "Starting Ollama service..."
+ollama serve > /dev/null 2>&1 &
 
 # Wait for the service to be available
 if ! wait_for_ollama; then
@@ -77,7 +76,18 @@ if ! wait_for_ollama; then
 fi
 
 # Define default models to ensure are available
-DEFAULT_MODELS=("qwen3:1.7b")
+# Try to read from models config if available, otherwise default to qwen3:1.7b
+if [ -f "/models/model_config.json" ]; then
+    # Extract default model from config using grep and sed
+    DEFAULT_MODEL=$(grep -o '"default_model": *"[^"]*"' /models/model_config.json | sed 's/.*"default_model": *"\(.*\)".*/\1/')
+    if [ -z "$DEFAULT_MODEL" ]; then
+        DEFAULT_MODEL="qwen3:1.7b"
+    fi
+else
+    DEFAULT_MODEL="qwen3:1.7b"
+fi
+
+DEFAULT_MODELS=("$DEFAULT_MODEL")
 
 # Process each default model
 for model in "${DEFAULT_MODELS[@]}"; do
@@ -88,8 +98,7 @@ for model in "${DEFAULT_MODELS[@]}"; do
         if pull_model "$model"; then
             print_info "Successfully downloaded $model"
         else
-            print_error "Failed to download $model"
-            exit 1
+            print_warn "Failed to download $model, but continuing..."
         fi
     fi
 done

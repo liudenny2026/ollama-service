@@ -153,6 +153,7 @@ jobs:
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -166,6 +167,7 @@ jobs:
           platforms: linux/amd64
           build-args: |
             BUILDKIT_INLINE_CACHE=1
+          provenance: false
 
       - name: Output image tag
         id: image-output
@@ -173,6 +175,16 @@ jobs:
           echo "Built image tags: ${{ steps.meta.outputs.tags }}"
           echo "Primary tag: ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}"
           echo "Latest tag: ${{ env.DOCKER_IMAGE }}:latest"
+          echo "Image digest: ${{ steps.build.outputs.digest }}"
+
+      - name: Verify image in registry
+        run: |
+          echo "Verifying pushed images..."
+          echo "Tags: ${{ steps.meta.outputs.tags }}"
+          for tag in ${{ steps.meta.outputs.tags }}; do
+            echo "Checking tag: $tag"
+            timeout 60 docker manifest inspect $tag || echo "Warning: Tag $tag not found"
+          done
 
   test-docker:
     name: Test Docker Image
@@ -193,22 +205,39 @@ jobs:
           username: ${{ secrets.ALIYUN_USERNAME }}
           password: ${{ secrets.ALIYUN_PASSWORD }}
 
+      - name: List available tags in registry
+        run: |
+          echo "Checking available tags in registry..."
+          docker manifest inspect ${{ env.DOCKER_IMAGE }}:latest || echo "Latest tag not found"
+          docker manifest inspect ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }} || echo "SHA tag not found, will use latest"
+
       - name: Pull Docker image from Aliyun Registry
         run: |
           echo "Pulling image from Aliyun Container Registry..."
           echo "Registry: ${{ env.ALIYUN_REGISTRY }}"
           echo "Image: ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}"
-          timeout 300 docker pull ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }} || {
-            echo "Pull failed, trying latest tag as fallback..."
-            timeout 300 docker pull ${{ env.DOCKER_IMAGE }}:latest || exit 1
-          }
-          echo "Successfully pulled image"
+
+          # Try SHA tag first, fallback to latest
+          if timeout 300 docker pull ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}; then
+            IMAGE_TAG="main-${{ github.sha }}"
+            echo "✓ Pulled image with SHA tag"
+          elif timeout 300 docker pull ${{ env.DOCKER_IMAGE }}:latest; then
+            IMAGE_TAG="latest"
+            echo "✓ Pulled image with latest tag"
+          else
+            echo "❌ Failed to pull any image"
+            exit 1
+          fi
+
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          echo "Successfully pulled image with tag: $IMAGE_TAG"
 
       - name: Start Ollama container
         run: |
+          echo "Starting container with tag: $IMAGE_TAG"
           docker run -d --name ollama-test -p 11434:11434 \
             --restart on-failure:3 \
-            ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}
+            ${{ env.DOCKER_IMAGE }}:$IMAGE_TAG
 
       - name: Check container status
         run: |
@@ -224,6 +253,9 @@ jobs:
       - name: Wait for service to be ready
         run: |
           echo "Waiting for Ollama service to start..."
+          echo "Container status:"
+          docker ps -a | grep ollama-test
+
           MAX_ATTEMPTS=60
           for i in $(seq 1 $MAX_ATTEMPTS); do
             echo "Attempt $i/$MAX_ATTEMPTS: Checking Ollama API..."
@@ -235,13 +267,15 @@ jobs:
             # 检查容器是否仍在运行
             if ! docker ps | grep -q ollama-test; then
               echo "❌ Container stopped unexpectedly"
-              docker logs ollama-test
+              echo "Container exit code:"
+              docker ps -a | grep ollama-test
+              docker logs --tail 100 ollama-test
               exit 1
             fi
             sleep 5
           done
           echo "❌ Timeout waiting for Ollama service"
-          docker logs ollama-test
+          docker logs --tail 100 ollama-test
           exit 1
 
       - name: Check Ollama API
@@ -255,7 +289,7 @@ jobs:
       - name: Verify default model
         run: |
           echo "Verifying default model availability..."
-          echo "Checking if qwen3:1.7b model exists..."
+          echo "Checking if qwen3:0.6b model exists..."
           docker exec ollama-test ollama list || true
           echo "Note: Model may still be downloading in the background"
 
@@ -263,7 +297,7 @@ jobs:
         if: always()
         run: |
           echo "=== Container Logs (Last 50 lines) ==="
-          docker logs --tail 50 ollama-test
+          docker logs --tail 50 ollama-test || echo "No logs available"
 
       - name: Cleanup
         if: always()

@@ -17,8 +17,9 @@ permissions:
 
 env:
   ALIYUN_REGISTRY: crpi-x8d8kf9cyh6zayx0.cn-chengdu.personal.cr.aliyuncs.com
-  ALIYUN_NAMESPACE: ollama-service
-  DOCKER_IMAGE: crpi-x8d8kf9cyh6zayx0.cn-chengdu.personal.cr.aliyuncs.com/ollama-service/ollama-service
+  ALIYUN_NAMESPACE: devsecops2026
+  ALIYUN_REPOSITORY: ollama-server
+  DOCKER_IMAGE: crpi-x8d8kf9cyh6zayx0.cn-chengdu.personal.cr.aliyuncs.com/devsecops2026/ollama-server
   DOCKER_TAG: ${{ github.sha }}
 
 jobs:
@@ -118,6 +119,7 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-latest
     needs: [lint, test]
+    timeout-minutes: 30
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
     steps:
@@ -157,9 +159,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.DOCKER_IMAGE }}:latest
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
       - name: Output image tag
         id: image-output
@@ -172,6 +178,7 @@ jobs:
     name: Test Docker Image
     runs-on: ubuntu-latest
     needs: build
+    timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -191,26 +198,44 @@ jobs:
           echo "Pulling image from Aliyun Container Registry..."
           echo "Registry: ${{ env.ALIYUN_REGISTRY }}"
           echo "Image: ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}"
-          docker pull ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}
+          timeout 300 docker pull ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }} || {
+            echo "Pull failed, trying latest tag as fallback..."
+            timeout 300 docker pull ${{ env.DOCKER_IMAGE }}:latest || exit 1
+          }
           echo "Successfully pulled image"
 
       - name: Start Ollama container
         run: |
           docker run -d --name ollama-test -p 11434:11434 \
+            --health-cmd="curl -f http://localhost:11434/api/tags || exit 1" \
+            --health-interval=10s \
+            --health-timeout=5s \
+            --health-retries=5 \
             ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}
+
+      - name: Check container status
+        run: |
+          sleep 5
+          docker ps -a | grep ollama-test || {
+            echo "❌ Container not found"
+            docker logs ollama-test || true
+            exit 1
+          }
 
       - name: Wait for service to be ready
         run: |
           echo "Waiting for Ollama service to start..."
-          for i in {1..30}; do
+          MAX_ATTEMPTS=60
+          for i in $(seq 1 $MAX_ATTEMPTS); do
             if curl -f http://localhost:11434/api/tags > /dev/null 2>&1; then
-              echo "Ollama API is ready!"
+              echo "✅ Ollama API is ready!"
               exit 0
             fi
-            echo "Attempt $i/30: Service not ready, waiting..."
-            sleep 10
+            echo "Attempt $i/$MAX_ATTEMPTS: Service not ready, waiting..."
+            sleep 5
           done
-          echo "Timeout waiting for Ollama service"
+          echo "❌ Timeout waiting for Ollama service"
+          docker logs ollama-test
           exit 1
 
       - name: Check Ollama API

@@ -8,6 +8,7 @@ services:
     container_name: ollama-gitlab-registry
     ports:
       - "11434:11434"
+      - "8501:8501"
     volumes:
       - ollama_data:/root/.ollama
     environment:
@@ -22,8 +23,7 @@ services:
     #           count: 1
     #           capabilities: [gpu]
     restart: unless-stopped
-    # 确保模型初始化
-    command: /init_ollama.sh
+    # 启动 Ollama 和 Streamlit 服务
 
 volumes:
   ollama_data:

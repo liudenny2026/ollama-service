@@ -105,6 +105,10 @@ RUN echo '#!/bin/bash' > /start_streamlit.sh && \
     echo 'tail -f /dev/null' >> /start_streamlit.sh && \
     chmod +x /start_streamlit.sh
 
+# Copy the combined startup script
+COPY start_ollama_and_streamlit.sh /start_ollama_and_streamlit.sh
+RUN chmod +x /start_ollama_and_streamlit.sh
+
 # Set the correct entrypoint and default command
 ENTRYPOINT ["/bin/bash"]
-CMD ["/start_and_download.sh"]
+CMD ["/start_ollama_and_streamlit.sh"]

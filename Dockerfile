@@ -1,6 +1,10 @@
 # Use the official Ollama image
 FROM ollama/ollama:0.13.5
 
+# Copy init script
+COPY init_ollama.sh /init_ollama.sh
+RUN chmod +x /init_ollama.sh
+
 # Install curl for health checks and other utilities
 RUN if which apk > /dev/null 2>&1; then \
     apk add --no-cache curl ca-certificates; \
@@ -101,5 +105,6 @@ RUN echo '#!/bin/bash' > /start_streamlit.sh && \
     echo 'tail -f /dev/null' >> /start_streamlit.sh && \
     chmod +x /start_streamlit.sh
 
-# Default command to run the script
+# Set the correct entrypoint and default command
+ENTRYPOINT ["/bin/bash"]
 CMD ["/start_and_download.sh"]

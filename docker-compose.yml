@@ -17,7 +17,7 @@ services:
     #           count: 1
     #           capabilities: [gpu]
     # 确保模型初始化
-    command: sh -c "./init_ollama.sh"
+    command: /init_ollama.sh
 
 volumes:
   ollama_data:

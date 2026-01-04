@@ -16,7 +16,7 @@ RUN if which apk > /dev/null 2>&1; then \
 # Set labels for GitLab Container Registry
 LABEL maintainer="GitLab Ollama Service" \
       org.opencontainers.image.title="Ollama Service" \
-      org.opencontainers.image.description="Ollama service with qwen3:1.7b model pre-downloaded" \
+      org.opencontainers.image.description="Ollama service with qwen3:0.6b model pre-downloaded" \
       org.opencontainers.image.version="0.13.5" \
       org.opencontainers.image.source="https://github.com/ollama/ollama" \
       org.opencontainers.image.licenses="MIT"
@@ -56,8 +56,8 @@ RUN echo '#!/bin/bash' > /start_and_download.sh && \
     echo 'fi' >> /start_and_download.sh && \
     echo '' >> /start_and_download.sh && \
     echo '# Download the default model' >> /start_and_download.sh && \
-    echo 'echo "Downloading qwen3:1.7b model..."' >> /start_and_download.sh && \
-    echo 'ollama pull qwen3:1.7b || echo "Warning: Model download failed"' >> /start_and_download.sh && \
+    echo 'echo "Downloading qwen3:0.6b model..."' >> /start_and_download.sh && \
+    echo 'ollama pull qwen3:0.6b || echo "Warning: Model download failed"' >> /start_and_download.sh && \
     echo 'echo "Model setup completed"' >> /start_and_download.sh && \
     echo '' >> /start_and_download.sh && \
     echo '# Wait for Ollama process' >> /start_and_download.sh && \
@@ -90,8 +90,8 @@ RUN echo '#!/bin/bash' > /start_streamlit.sh && \
     echo 'fi' >> /start_streamlit.sh && \
     echo '' >> /start_streamlit.sh && \
     echo '# Download the default model' >> /start_streamlit.sh && \
-    echo 'echo "Downloading qwen3:1.7b model..."' >> /start_streamlit.sh && \
-    echo 'ollama pull qwen3:1.7b' >> /start_streamlit.sh && \
+    echo 'echo "Downloading qwen3:0.6b model..."' >> /start_streamlit.sh && \
+    echo 'ollama pull qwen3:0.6b' >> /start_streamlit.sh && \
     echo 'echo "Model download completed"' >> /start_streamlit.sh && \
     echo '' >> /start_streamlit.sh && \
     echo '# Keep the service running - start Streamlit interface on port 8501' >> /start_streamlit.sh && \

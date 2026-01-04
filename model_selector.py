@@ -13,11 +13,11 @@ from typing import List, Optional
 
 # Popular models list
 POPULAR_MODELS = [
-    "qwen3:1.7b",
+    "qwen3:0.6b",
     "qwen2.5:0.5b",
     "qwen2.5:7b",
     "qwen3:latest",
-    "qwen3:0.6b",
+    "qwen3:1.7b",
     "qwen3:4b",
     "qwen3:14b",
     "qwen3:32b",

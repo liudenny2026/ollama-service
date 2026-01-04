@@ -21,11 +21,11 @@ st.set_page_config(
 
 # Popular models list
 POPULAR_MODELS = [
-    "qwen3:1.7b",
-    "qwen2.5:0.5b",
-    "qwen2.5:7b", 
-    "qwen3:latest",
     "qwen3:0.6b",
+    "qwen2.5:0.5b",
+    "qwen2.5:7b",
+    "qwen3:latest",
+    "qwen3:1.7b",
     "qwen3:4b",
     "qwen3:14b",
     "qwen3:32b",
@@ -213,7 +213,7 @@ def main():
     # Quick download buttons for common models
     st.subheader("⚡ Quick Download")
     cols = st.columns(3)
-    quick_models = ["qwen3:1.7b", "qwen2.5:0.5b", "llama3:8b"]
+    quick_models = ["qwen3:0.6b", "qwen2.5:0.5b", "llama3:8b"]
     
     for i, model in enumerate(quick_models):
         with cols[i]:
@@ -235,7 +235,6 @@ def main():
     st.subheader("📚 Available Models Reference")
     st.markdown("""
     - **Qwen3 Series**: `qwen3:latest`, `qwen3:0.6b`, `qwen3:1.7b`, `qwen3:4b`, `qwen3:14b`, `qwen3:32b`, `qwen3:235b`\n    - **Qwen2.5 Series**: `qwen2.5:0.5b`, `qwen2.5:7b`
-    - **Qwen3 Series**: `qwen3:latest`, `qwen3:0.6b`, `qwen3:1.7b`, `qwen3:4b`, `qwen3:14b`, `qwen3:32b`, `qwen3:235b`
     - **Llama3 Series**: `llama3:8b`, `llama3:70b`
     - **Gemma2 Series**: `gemma2:2b`, `gemma2:9b`
     - **Other Models**: `mistral:7b`, `mixtral:8x7b`, `phi3:3.8b`, `command-r:35b`, `yi:9b`, `dbrx:132b`

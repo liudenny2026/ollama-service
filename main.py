@@ -31,7 +31,7 @@ def run_interactive_selector():
 def run_chat_client():
     """Run the chat client with default model"""
     try:
-        print("Starting Chat Client with qwen3:1.7b...")
+        print("Starting Chat Client with qwen3:0.6b...")
         subprocess.run([sys.executable, "chat_with_default_model.py"])
     except Exception as e:
         print(f"Error running chat client: {e}")

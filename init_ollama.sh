@@ -76,15 +76,15 @@ if ! wait_for_ollama; then
 fi
 
 # Define default models to ensure are available
-# Try to read from models config if available, otherwise default to qwen3:1.7b
+# Try to read from models config if available, otherwise default to qwen3:0.6b
 if [ -f "/models/model_config.json" ]; then
     # Extract default model from config using grep and sed
     DEFAULT_MODEL=$(grep -o '"default_model": *"[^"]*"' /models/model_config.json | sed 's/.*"default_model": *"\(.*\)".*/\1/')
     if [ -z "$DEFAULT_MODEL" ]; then
-        DEFAULT_MODEL="qwen3:1.7b"
+        DEFAULT_MODEL="qwen3:0.6b"
     fi
 else
-    DEFAULT_MODEL="qwen3:1.7b"
+    DEFAULT_MODEL="qwen3:0.6b"
 fi
 
 DEFAULT_MODELS=("$DEFAULT_MODEL")

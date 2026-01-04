@@ -1,5 +1,5 @@
 {
-  "default_model": "qwen3:1.7b",
+  "default_model": "qwen3:0.6b",
   "available_models": [
     "qwen2.5:7b",
     "qwen3:latest",

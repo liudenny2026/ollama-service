@@ -24,16 +24,16 @@ try:
 except FileNotFoundError:
     # Default config if file doesn't exist
     MODEL_CONFIG = {
-        "default_model": "qwen3:1.7b",
-        "available_models": ["qwen3:1.7b"],
+        "default_model": "qwen3:0.6b",
+        "available_models": ["qwen3:0.6b"],
         "download_settings": {"use_mirror": True}
     }
 
 def get_default_model():
-    return MODEL_CONFIG.get("default_model", "qwen3:1.7b")
+    return MODEL_CONFIG.get("default_model", "qwen3:0.6b")
 
 def get_available_models():
-    return MODEL_CONFIG.get("available_models", ["qwen3:1.7b"])
+    return MODEL_CONFIG.get("available_models", ["qwen3:0.6b"])
 
 class OllamaModelManager:
     def __init__(self, host: str = None):
@@ -134,8 +134,8 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: python model_manager.py [list|pull|delete] [model_name]")
         print("  list   - List all available models")
-        print("  pull   - Download a model (e.g., 'pull qwen3:1.7b')")
-        print("  delete - Delete a model (e.g., 'delete qwen3:1.7b')")
+        print("  pull   - Download a model (e.g., 'pull qwen3:0.6b')")
+        print("  delete - Delete a model (e.g., 'delete qwen3:0.6b')")
         print("")
         
         # List current models

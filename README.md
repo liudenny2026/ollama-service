@@ -5,7 +5,7 @@ This service provides an Ollama server for use with the LangChain application. I
 ## Features
 
 - Runs Ollama server using the official `ollama/ollama:0.13.5` image
-- Automatically downloads the `qwen3:1.7b` model on first startup
+- Automatically downloads the `qwen3:0.6b` model on first startup
 - Provides a model manager script for adding additional models
 - Includes GitLab CI configuration for automated builds
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script for the default model (qwen3:1.7b)
+Test script for the default model (qwen3:0.6b)
 """
 
 import requests
@@ -24,11 +24,11 @@ def test_model_availability():
         print(f"Available models: {available_models}")
         
         # Check for the new default model
-        if "qwen3:1.7b" in available_models:
-            print("✓ qwen3:1.7b model is available")
+        if "qwen3:0.6b" in available_models:
+            print("✓ qwen3:0.6b model is available")
             return True
         else:
-            print("✗ qwen3:1.7b model is NOT available")
+            print("✗ qwen3:0.6b model is NOT available")
             # Check for alternative qwen3 models
             qwen3_models = [model for model in available_models if "qwen3" in model]
             if qwen3_models:
@@ -40,7 +40,7 @@ def test_model_availability():
 
 def test_model_generation():
     """Test the generation functionality of the model"""
-    model_name = "qwen3:1.7b"
+    model_name = "qwen3:0.6b"
     
     # Test generation functionality
     payload = {
@@ -67,7 +67,7 @@ def test_model_generation():
 
 def test_model_chat():
     """Test the chat functionality of the model"""
-    model_name = "qwen3:1.7b"
+    model_name = "qwen3:0.6b"
     
     # Test chat functionality
     payload = {
@@ -98,7 +98,7 @@ def test_model_chat():
         return False
 
 def main():
-    print("Testing qwen3:1.7b model...")
+    print("Testing qwen3:0.6b model...")
     print("=" * 50)
     
     # Test model availability

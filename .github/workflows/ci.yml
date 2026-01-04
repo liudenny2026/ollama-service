@@ -14,6 +14,7 @@ on:
 permissions:
   contents: read
   security-events: write
+  packages: write
 
 env:
   DOCKER_IMAGE: ghcr.io/${{ github.repository }}

@@ -267,12 +267,14 @@ jobs:
           echo "Container status:"
           docker ps -a | grep ollama-test
 
+          OLLAMA_READY=false
           MAX_ATTEMPTS=60
           for i in $(seq 1 $MAX_ATTEMPTS); do
             echo "Attempt $i/$MAX_ATTEMPTS: Checking Ollama API..."
             if curl -f http://localhost:11434/api/tags > /dev/null 2>&1; then
               echo "✅ Ollama API is ready!"
               curl http://localhost:11434/api/tags
+              OLLAMA_READY=true
               break
             fi
             # 检查容器是否仍在运行
@@ -285,9 +287,12 @@ jobs:
             fi
             sleep 5
           done
-          echo "❌ Timeout waiting for Ollama service"
-          docker logs --tail 100 ollama-test
-          exit 1
+          
+          if [ "$OLLAMA_READY" = false ]; then
+            echo "❌ Timeout waiting for Ollama service"
+            docker logs --tail 100 ollama-test
+            exit 1
+          fi
 
       - name: Check Ollama API
         run: |

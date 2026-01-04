@@ -180,11 +180,16 @@ jobs:
       - name: Verify image in registry
         run: |
           echo "Verifying pushed images..."
-          echo "Tags: ${{ steps.meta.outputs.tags }}"
-          for tag in ${{ steps.meta.outputs.tags }}; do
-            echo "Checking tag: $tag"
-            timeout 60 docker manifest inspect $tag || echo "Warning: Tag $tag not found"
-          done
+          echo "Built tags:"
+          echo "  ${{ env.DOCKER_IMAGE }}:main"
+          echo "  ${{ env.DOCKER_IMAGE }}:latest"
+          echo "  ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}"
+
+          # Verify each tag
+          echo ""
+          echo "Checking tags..."
+          timeout 60 docker manifest inspect ${{ env.DOCKER_IMAGE }}:latest && echo "✓ latest tag verified" || echo "✗ latest tag not found"
+          timeout 60 docker manifest inspect ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }} && echo "✓ SHA tag verified" || echo "✗ SHA tag not found"
 
   test-docker:
     name: Test Docker Image

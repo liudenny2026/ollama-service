@@ -188,8 +188,8 @@ jobs:
           # Verify each tag
           echo ""
           echo "Checking tags..."
-          timeout 60 docker manifest inspect ${{ env.DOCKER_IMAGE }}:latest && echo "✓ latest tag verified" || echo "✗ latest tag not found"
-          timeout 60 docker manifest inspect ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }} && echo "✓ SHA tag verified" || echo "✗ SHA tag not found"
+          timeout 120 docker manifest inspect ${{ env.DOCKER_IMAGE }}:latest && echo "✓ latest tag verified" || echo "✗ latest tag not found"
+          timeout 120 docker manifest inspect ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }} && echo "✓ SHA tag verified" || echo "✗ SHA tag not found"
 
   test-docker:
     name: Test Docker Image
@@ -213,8 +213,8 @@ jobs:
       - name: List available tags in registry
         run: |
           echo "Checking available tags in registry..."
-          docker manifest inspect ${{ env.DOCKER_IMAGE }}:latest || echo "Latest tag not found"
-          docker manifest inspect ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }} || echo "SHA tag not found, will use latest"
+          timeout 120 docker manifest inspect ${{ env.DOCKER_IMAGE }}:latest || echo "Latest tag not found"
+          timeout 120 docker manifest inspect ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }} || echo "SHA tag not found, will use latest"
 
       - name: Pull Docker image from Aliyun Registry
         run: |
@@ -222,20 +222,26 @@ jobs:
           echo "Registry: ${{ env.ALIYUN_REGISTRY }}"
           echo "Image: ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}"
 
-          # Try SHA tag first, fallback to latest
-          if timeout 300 docker pull ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}; then
+          IMAGE_TAG=""
+
+          # Try SHA tag first, fallback to latest with improved error handling
+          if timeout 600 docker pull ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }} 2>/dev/null; then
             IMAGE_TAG="main-${{ github.sha }}"
             echo "✓ Pulled image with SHA tag"
-          elif timeout 300 docker pull ${{ env.DOCKER_IMAGE }}:latest; then
-            IMAGE_TAG="latest"
-            echo "✓ Pulled image with latest tag"
+            echo "Successfully pulled image with tag: $IMAGE_TAG"
           else
-            echo "❌ Failed to pull any image"
-            exit 1
+            echo "SHA tag not found, trying latest tag..."
+            if timeout 600 docker pull ${{ env.DOCKER_IMAGE }}:latest; then
+              IMAGE_TAG="latest"
+              echo "✓ Pulled image with latest tag"
+              echo "Successfully pulled image with tag: $IMAGE_TAG"
+            else
+              echo "❌ Failed to pull any image"
+              exit 1
+            fi
           fi
 
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-          echo "Successfully pulled image with tag: $IMAGE_TAG"
 
       - name: Start Ollama container
         run: |
@@ -267,7 +273,7 @@ jobs:
             if curl -f http://localhost:11434/api/tags > /dev/null 2>&1; then
               echo "✅ Ollama API is ready!"
               curl http://localhost:11434/api/tags
-              exit 0
+              break
             fi
             # 检查容器是否仍在运行
             if ! docker ps | grep -q ollama-test; then
